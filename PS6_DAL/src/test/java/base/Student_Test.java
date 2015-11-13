@@ -2,46 +2,39 @@ package base;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import java.util.ArrayList;
+
 import domain.PersonDomainModel;
-import util.HibernateUtil;
 
 public class Student_Test {
-	private static PersonDomainModel Kayla;
-	private static PersonDomainModel Mac;
-	private ArrayList<PersonDomainModel> pers;
-	private static UUID perID;
-	//private static final int PersonDomainModel = 0;
 
-
+	private static PersonDomainModel persons;
+	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		Session session = HibernateUtil.getSessionFactory().openSession();
-		Transaction tx = null;
-		//PersonDomainModel perGet = null;		
-		ArrayList<PersonDomainModel> pers = new ArrayList<PersonDomainModel>();
-		PersonDomainModel perGet = new PersonDomainModel perGet ;
-		perGet.setFirstName("Kayla");
-		perGet.setLastName("McAdoo");
-		perGet.setPostalCode(19720);
-		perGet.setStreet("123 Reads way");
-		perGet.setCity("New Castle");
 		
-		//PersonDAL.addPerson(Kayla);
-	
+		Date dDate = null;
+		try {
+			dDate = new SimpleDateFormat("yyyy-MM-dd").parse("1972-07-31");
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		persons = new PersonDomainModel();
+		persons.setFirstName("Kayla");
+		persons.setLastName("McAdoo");
+		persons.setBirthday(dDate);
+		persons.setCity("New Castle");
+		persons.setPostalCode(19720);
+		persons.setStreet("123 Reads Way");
 	}
 
 	@AfterClass
@@ -54,18 +47,59 @@ public class Student_Test {
 
 	@After
 	public void tearDown() throws Exception {
+		PersonDomainModel per;	
+		PersonDAL.deletePerson(persons.getPersonID());
+		per = PersonDAL.getPerson(persons.getPersonID());
+		assertNull(per);		
 	}
 	
 	@Test
-	public void deletePerson() {
-		PersonDAL.deletePerson(perID);
-		assertTrue(pers.size()== 0);
-	}
-	@Test
-	public void addPerson(){
-		PersonDAL.addPerson(Mac);
-		PersonDAL.getPersons().add(Mac);
-		assertEquals(Mac, PersonDAL.getPersons().get(1));
+	public void AddPersonTest()
+	{		
+		PersonDomainModel per;		
+		per = PersonDAL.getPerson(persons.getPersonID());		
+		assertNull("Adding persons" ,per);		
+		PersonDAL.addPerson(persons);	
+		
+		per = PersonDAL.getPerson(persons.getPersonID());
+		
+		assertNotNull("After adding",per);
 	}
 	
+	@Test
+	public void UpdatePersonTest()
+	{		
+		PersonDomainModel person;
+		final String C_LASTNAME = "Mac";
+		
+		person = PersonDAL.getPerson(persons.getPersonID());		
+		assertNull("before updating",person);		
+		PersonDAL.addPerson(persons);	
+		
+		persons.setLastName(C_LASTNAME);
+		PersonDAL.updatePerson(persons);
+		
+		person = PersonDAL.getPerson(persons.getPersonID());
+
+		assertTrue("No update",persons.getLastName() == C_LASTNAME);
+	}
+
+	@Test
+	public void DeletePersonTest()
+	{		
+		PersonDomainModel person;		
+		person = PersonDAL.getPerson(persons.getPersonID());		
+		assertNull("Empty",person);	
+		
+		PersonDAL.addPerson(persons);			
+		persons = PersonDAL.getPerson(persons.getPersonID());
+		System.out.println(persons.getPersonID() + " found");
+		assertNotNull("Before delete",person);
+		
+		PersonDAL.deletePerson(persons.getPersonID());
+		person = PersonDAL.getPerson(persons.getPersonID());		
+		assertNull("after delete",person);	
+		
+	}
 }
+	
